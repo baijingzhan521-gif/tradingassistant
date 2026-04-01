@@ -65,5 +65,10 @@ def classify_market_regime(
         return MarketRegimeType.BULL_TREND
     if trend_down and not high_vol:
         return MarketRegimeType.BEAR_TREND
+    # High volatility with a trend is transitional (trend may be reversing)
+    if high_vol and trend_up:
+        return MarketRegimeType.BULL_TREND
+    if high_vol and trend_down:
+        return MarketRegimeType.BEAR_TREND
 
     return MarketRegimeType.TRANSITION

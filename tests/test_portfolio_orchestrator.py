@@ -159,7 +159,7 @@ class TestRegimeWeights:
     def test_weights_sum_to_at_most_1(self) -> None:
         for regime, weights in REGIME_WEIGHTS.items():
             total = sum(weights.values())
-            assert total <= 1.01, f"{regime} weights sum to {total}"
+            assert total <= 1.001, f"{regime} weights sum to {total}"
 
     def test_all_regimes_have_leverage_limits(self) -> None:
         for regime in MarketRegimeType:

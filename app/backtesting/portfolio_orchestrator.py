@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
-from statistics import mean, median
+from statistics import mean
 from typing import Any, Optional
 
 import numpy as np
