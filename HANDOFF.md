@@ -8,7 +8,10 @@
 
 ## 0. 阅读本文档之前
 
-**最重要的一句话：** 这个项目的回测基础设施已经 100% 完成，代码质量已通过 402 个自动化测试。但所有回测都需要连接 Binance 交易所拉取真实 OHLCV K 线数据，因此**必须在能访问 Binance 的网络环境下运行**。
+**最重要的一句话：** 这个项目的回测基础设施已经 100% 完成，代码质量已通过 402 个自动化测试。回测支持两种数据模式：
+
+1. **在线模式**：连接 Binance 交易所拉取真实 OHLCV K 线数据（需要能访问 Binance 的网络环境）
+2. **离线模式**：使用 `scripts/generate_offline_ohlcv.py` 生成合成数据，**无需任何交易所连接或 API Key**
 
 本文档的目标读者是接手这个项目并需要在本地电脑环境下运行回测的同事。
 
@@ -259,6 +262,52 @@ tradingassistant/
 ---
 
 ## 5. 运行回测的具体命令
+
+### 5.0 离线模式：无需交易所连接即可回测（推荐先用这个验证环境）
+
+如果你的网络无法访问 Binance，或者只是想快速验证回测流程，可以使用离线数据生成器：
+
+```bash
+# 第一步：生成合成 OHLCV 数据（GBM 模型 + 类 BTC 波动率）
+python scripts/generate_offline_ohlcv.py
+
+# 第二步：直接跑回测（自动从缓存读取，不联网）
+python scripts/run_backtest.py \
+  --symbols "BTC/USDT:USDT" \
+  --strategy-profiles "swing_trend_long_regime_gate_v1" \
+  --start 2024-03-19 --end 2026-03-19 \
+  --take-profit-mode scaled --scaled-tp1-r 1.0 --scaled-tp2-r 3.0 \
+  --long-exit-json '{"take_profit_mode":"scaled","scaled_tp1_r":1.0,"scaled_tp2_r":3.0}' \
+  --short-exit-json '{"take_profit_mode":"fixed_r","fixed_take_profit_r":1.5}' \
+  --output-dir artifacts/backtests/offline_demo
+```
+
+**生成器支持的参数：**
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| `--symbol` | `BTC/USDT:USDT` | 交易对 |
+| `--start` | `2024-03-19` | 回测起始日 |
+| `--end` | `2026-03-19` | 回测结束日 |
+| `--start-price` | `64000.0` | 起始价格 |
+| `--annual-drift` | `0.15` | 年化漂移率 |
+| `--annual-vol` | `0.65` | 年化波动率（BTC 级别） |
+| `--seed` | `42` | 随机种子（相同种子 = 相同数据） |
+| `--lookback` | `300` | 预加载 K 线数 |
+
+**生成长样本（2020→2026）：**
+
+```bash
+python scripts/generate_offline_ohlcv.py \
+  --start 2020-01-01 --end 2026-03-19 \
+  --start-price 7200 --seed 42
+```
+
+**原理说明：**
+- 数据使用 Geometric Brownian Motion (GBM) 生成，包含 regime 切换（牛/熊/震荡）和波动率聚集效应
+- CSV 文件保存在 `artifacts/backtests/cache/`，格式与交易所真实数据完全一致
+- `BacktestService` 会自动检测缓存命中，跳过 API 调用
+- 合成数据的结果**不应被当成真实策略表现**，仅用于验证回测流程和代码正确性
 
 ### 5.1 启动 Web 服务（可选，回测不需要）
 
@@ -583,7 +632,23 @@ python scripts/check_exchange_connectivity.py
 # 启动 Web 服务
 uvicorn app.main:app --reload
 
-# 基础回测
+# ========== 离线回测（不需要交易所连接）==========
+
+# 生成离线数据（两年窗口）
+python scripts/generate_offline_ohlcv.py
+
+# 生成离线数据（六年窗口）
+python scripts/generate_offline_ohlcv.py --start 2020-01-01 --end 2026-03-19 --start-price 7200
+
+# 用离线数据跑基础回测
+python scripts/run_backtest.py --symbols "BTC/USDT:USDT" --strategy-profiles "swing_trend_long_regime_gate_v1" --start 2024-03-19 --end 2026-03-19
+
+# 用离线数据跑多策略回测
+python scripts/run_backtest.py --symbols "BTC/USDT:USDT" --strategy-profiles "trend_following_v1,swing_improved_v1,mean_reversion_v1" --start 2024-03-19 --end 2026-03-19
+
+# ========== 在线回测（需要 Binance 连接）==========
+
+# 基础回测（从 Binance 拉数据）
 python scripts/run_backtest.py --symbols "BTC/USDT:USDT" --strategy-profiles "swing_trend_long_regime_gate_v1" --start 2024-03-19 --end 2026-03-19
 
 # Walk-Forward OOS
