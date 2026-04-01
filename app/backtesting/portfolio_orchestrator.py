@@ -314,7 +314,7 @@ class PortfolioOrchestrator:
                 slippage_bps=base.slippage_bps,
                 tp1_scale_out=0.3,
                 move_stop_to_entry_after_tp1=True,
-                swing_max_hold_bars=480,  # 20 days on 1h
+                swing_max_hold_bars=480,  # 20 days × 24 bars/day on 1h
                 lookback=base.lookback,
                 cache_dir=base.cache_dir,
                 swing_detection_mode=base.swing_detection_mode,
@@ -330,7 +330,7 @@ class PortfolioOrchestrator:
                 fixed_take_profit_r=1.0,
                 taker_fee_bps=base.taker_fee_bps,
                 slippage_bps=base.slippage_bps,
-                swing_max_hold_bars=48,  # 2 days
+                swing_max_hold_bars=48,  # 2 days × 24 bars/day on 1h
                 lookback=base.lookback,
                 cache_dir=base.cache_dir,
                 swing_detection_mode=base.swing_detection_mode,

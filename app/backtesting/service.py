@@ -1149,6 +1149,7 @@ class BacktestService:
             lowest_price_since_entry=fill_price,
             leverage=self.assumptions.leverage,
         )
+        # Fees are charged on notional value (price × quantity × leverage) per exchange convention
         entry_fee = fill_price * (self.assumptions.taker_fee_bps / 10000) * position.leverage
         position.fees_quote += entry_fee
         position.realized_pnl_quote -= entry_fee
