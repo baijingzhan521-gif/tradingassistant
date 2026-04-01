@@ -44,9 +44,9 @@ from app.utils.timeframes import TIMEFRAME_TO_MINUTES, get_strategy_required_tim
 # ---------------------------------------------------------------------------
 # GBM parameters calibrated to ~BTC daily behaviour
 # ---------------------------------------------------------------------------
-DEFAULT_ANNUAL_DRIFT = 0.15          # ~15 % annual drift
-DEFAULT_ANNUAL_VOL = 0.65           # ~65 % annualised volatility (BTC-like)
-REGIME_CHANGE_PROB = 0.02           # 2 % chance per day to switch regime
+DEFAULT_ANNUAL_DRIFT = 0.15          # ~15% annual drift
+DEFAULT_ANNUAL_VOL = 0.65           # ~65% annualised volatility (BTC-like)
+REGIME_CHANGE_PROB = 0.02           # 2% chance per day to switch regime
 VOL_CLUSTER_HALF_LIFE_DAYS = 15     # GARCH-like half-life
 
 STRATEGIES_TO_COVER = [
