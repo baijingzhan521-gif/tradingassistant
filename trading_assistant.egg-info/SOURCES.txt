@@ -16,6 +16,8 @@ app/backtesting/__init__.py
 app/backtesting/diagnostics.py
 app/backtesting/portfolio_orchestrator.py
 app/backtesting/service.py
+app/backtesting/stress_tester.py
+app/backtesting/walk_forward_validator.py
 app/core/__init__.py
 app/core/config.py
 app/core/database.py
@@ -183,6 +185,7 @@ tests/test_simple_candidate_v2_regime_switch_fixed_calendar.py
 tests/test_simple_candidate_v2_regime_switch_robustness.py
 tests/test_strategy.py
 tests/test_strategy_regression.py
+tests/test_stress_tester.py
 tests/test_switch_axis_band_management_one_rule_gate.py
 tests/test_switch_candidate_vs_ct_block80.py
 tests/test_switch_portfolio_blend_one_rule_gate.py
@@ -192,6 +195,8 @@ tests/test_switch_trend_strength_management_one_rule_gate.py
 tests/test_trend_confluence_standalone_one_rule_gate.py
 tests/test_trend_divergence_standalone_one_rule_gate.py
 tests/test_trend_pullback_standalone_one_rule_gate.py
+tests/test_walk_forward_validator.py
+tests/test_wf_oos_stress.py
 tests/test_workspace_page.py
 tests/test_workspace_smoke.py
 trading_assistant.egg-info/PKG-INFO
