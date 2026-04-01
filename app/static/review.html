@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>交易复盘</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #0b1220;
+      --panel: #111a2e;
+      --panel-2: #16213a;
+      --text: #eaf0ff;
+      --muted: #9fb0d0;
+      --line: rgba(255, 255, 255, 0.08);
+      --accent: #7dd3fc;
+      --accent-2: #a78bfa;
+      --good: #4ade80;
+      --warn: #fbbf24;
+      --bad: #fb7185;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+      background: radial-gradient(circle at top, #16213a 0%, var(--bg) 50%, #050814 100%);
+      color: var(--text);
+    }
+
+    .wrap {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-end;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: 32px;
+    }
+
+    .hero p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      max-width: 820px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 16px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .advanced-filters {
+      margin-top: 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.03);
+    }
+
+    .advanced-filters summary {
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    input {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: rgba(8, 12, 24, 0.85);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      cursor: pointer;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #08101f;
+      font-weight: 700;
+    }
+
+    button.secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+
+    .status {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 10px 8px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.04);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .pill.good { color: var(--good); }
+    .pill.warn { color: var(--warn); }
+    .pill.bad { color: var(--bad); }
+
+    .muted { color: var(--muted); }
+
+    .compare-box {
+      display: grid;
+      gap: 12px;
+    }
+
+    .compare-output {
+      margin-top: 12px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .diff {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px;
+      background: rgba(255,255,255,0.03);
+    }
+
+    .diff code, pre {
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    @media (max-width: 960px) {
+      .grid, .summary-grid, .controls {
+        grid-template-columns: 1fr;
+      }
+      .hero {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div>
+        <h1>交易复盘</h1>
+        <p>先筛历史，再对比两次分析最关键的差异。</p>
+      </div>
+      <div class="pill warn">内部复盘工具</div>
+    </div>
+
+    <div class="grid">
+      <section class="card">
+        <h2 style="margin-top: 0;">历史记录</h2>
+        <div class="controls">
+          <div><label for="symbol">交易对</label><input id="symbol" placeholder="ETH/USDT:USDT" /></div>
+          <div><label for="action">结论</label><input id="action" placeholder="做多 / 做空 / 观望" /></div>
+          <div><label for="bias">偏向</label><input id="bias" placeholder="偏多 / 偏空 / 中性" /></div>
+          <div><label for="from_time">起始时间</label><input id="from_time" placeholder="2026-03-18T00:00:00Z" /></div>
+          <div><label for="to_time">结束时间</label><input id="to_time" placeholder="2026-03-19T00:00:00Z" /></div>
+        </div>
+        <details class="advanced-filters">
+          <summary>展开高级筛选</summary>
+          <div class="controls" style="margin-top: 12px;">
+            <div><label for="strategy_profile">策略</label><input id="strategy_profile" placeholder="swing_trend_simple_candidate_v2" /></div>
+            <div><label for="limit">条数</label><input id="limit" value="50" inputmode="numeric" /></div>
+            <div><label for="offset">偏移</label><input id="offset" value="0" inputmode="numeric" /></div>
+          </div>
+        </details>
+        <div class="actions">
+          <button id="loadBtn">加载分析</button>
+          <button id="resetBtn" class="secondary">重置筛选</button>
+        </div>
+        <div class="status" id="listStatus">就绪。</div>
+        <div style="overflow-x: auto; margin-top: 12px;">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>时间</th>
+                <th>交易对</th>
+                <th>结论</th>
+                <th>偏向</th>
+                <th>置信度</th>
+                <th>节奏</th>
+                <th>摘要</th>
+                <th>对比</th>
+              </tr>
+            </thead>
+            <tbody id="analysesBody">
+              <tr><td colspan="9" class="muted">加载分析后显示列表。</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card compare-box">
+        <div>
+          <h2 style="margin-top: 0;">差异对比</h2>
+          <p class="muted" style="margin-top: 0;">从列表里选两条分析，或手动输入两条分析 ID。</p>
+        </div>
+        <div>
+          <label for="leftId">左侧分析 ID</label>
+          <input id="leftId" placeholder="a1" />
+        </div>
+        <div>
+          <label for="rightId">右侧分析 ID</label>
+          <input id="rightId" placeholder="b1" />
+        </div>
+        <div class="actions">
+          <button id="compareBtn">开始对比</button>
+        </div>
+        <div class="status" id="compareStatus">尚未开始对比。</div>
+        <div id="compareOutput" class="compare-output"></div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const els = {
+      symbol: document.getElementById("symbol"),
+      action: document.getElementById("action"),
+      bias: document.getElementById("bias"),
+      strategy_profile: document.getElementById("strategy_profile"),
+      from_time: document.getElementById("from_time"),
+      to_time: document.getElementById("to_time"),
+      limit: document.getElementById("limit"),
+      offset: document.getElementById("offset"),
+      listStatus: document.getElementById("listStatus"),
+      analysesBody: document.getElementById("analysesBody"),
+      leftId: document.getElementById("leftId"),
+      rightId: document.getElementById("rightId"),
+      compareStatus: document.getElementById("compareStatus"),
+      compareOutput: document.getElementById("compareOutput"),
+    };
+
+    function readFilters() {
+      return {
+        symbol: els.symbol.value.trim(),
+        action: els.action.value.trim(),
+        bias: els.bias.value.trim(),
+        strategy_profile: els.strategy_profile.value.trim(),
+        from_time: els.from_time.value.trim(),
+        to_time: els.to_time.value.trim(),
+        limit: els.limit.value.trim(),
+        offset: els.offset.value.trim(),
+      };
+    }
+
+    function toQuery(params) {
+      const query = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value) query.set(key, value);
+      });
+      return query.toString();
+    }
+
+    function pillClass(action, bias) {
+      if (action === "LONG" || bias === "bullish") return "good";
+      if (action === "SHORT" || bias === "bearish") return "bad";
+      return "warn";
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function formatJson(value) {
+      return escapeHtml(JSON.stringify(value));
+    }
+
+    function displayAction(action) {
+      return {
+        LONG: "做多",
+        SHORT: "做空",
+        WAIT: "观望",
+      }[action] || action || "暂无";
+    }
+
+    function displayBias(bias) {
+      return {
+        bullish: "偏多",
+        bearish: "偏空",
+        neutral: "中性",
+      }[bias] || bias || "暂无";
+    }
+
+    function displayTiming(timing) {
+      return {
+        now: "立即观察",
+        wait_pullback: "等待回踩",
+        wait_confirmation: "等待确认",
+        skip: "放弃交易",
+      }[timing] || timing || "暂无";
+    }
+
+    function renderAnalyses(items) {
+      if (!items.length) {
+        els.analysesBody.innerHTML = '<tr><td colspan="9" class="muted">没有符合筛选条件的分析。</td></tr>';
+        return;
+      }
+      els.analysesBody.innerHTML = items.map((item) => `
+        <tr>
+          <td><code>${item.analysis_id}</code></td>
+          <td>${item.timestamp ?? ""}</td>
+          <td>${item.symbol ?? ""}</td>
+          <td><span class="pill ${pillClass(item.action, item.bias)}">${displayAction(item.action)}</span></td>
+          <td>${displayBias(item.bias)}</td>
+          <td>${item.confidence ?? ""}</td>
+          <td>${displayTiming(item.recommended_timing)}</td>
+          <td>${item.summary ?? ""}</td>
+          <td>
+            <button class="secondary" data-pick="${item.analysis_id}">选用</button>
+          </td>
+        </tr>
+      `).join("");
+
+      document.querySelectorAll("[data-pick]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const id = button.getAttribute("data-pick");
+          if (!els.leftId.value) {
+            els.leftId.value = id;
+          } else if (!els.rightId.value || els.rightId.value === els.leftId.value) {
+            els.rightId.value = id;
+          } else {
+            els.leftId.value = id;
+          }
+        });
+      });
+    }
+
+    function renderChangedFields(changedFields) {
+      if (!changedFields || !changedFields.length) {
+        return '<div class="muted" style="margin-top: 8px;">本区没有字段级变化。</div>';
+      }
+      return changedFields.map((change) => `
+        <div style="margin-top: 10px;">
+          <code>${escapeHtml(change.field)}</code><br />
+          <span class="muted">之前：</span> <code>${formatJson(change.before)}</code><br />
+          <span class="muted">之后：</span> <code>${formatJson(change.after)}</code>
+        </div>
+      `).join("");
+    }
+
+    function renderSectionDiff(title, section) {
+      if (!section || !section.changed) {
+        return `
+          <div class="diff">
+            <strong>${escapeHtml(title)}</strong>
+            <div class="muted" style="margin-top: 8px;">本区没有变化。</div>
+          </div>
+        `;
+      }
+      return `
+        <div class="diff">
+          <strong>${escapeHtml(title)}</strong>
+          <div class="muted" style="margin-top: 6px;">${section.change_count ?? 0} 个变化字段</div>
+          ${section.highlights && section.highlights.length ? `<div style="margin-top: 8px;">${section.highlights.map((item) => `<div><code>${escapeHtml(item)}</code></div>`).join("")}</div>` : ""}
+          ${renderChangedFields(section.changed_fields || [])}
+        </div>
+      `;
+    }
+
+    function renderTimeframeDiff(section) {
+      if (!section || !section.changed) {
+        return "";
+      }
+      return `
+        <div class="diff">
+          <strong>${escapeHtml(section.timeframe || "timeframe")}</strong>
+          <div class="muted" style="margin-top: 6px;">${section.change_count ?? 0} 个变化字段</div>
+          ${section.signal_shift ? `<div style="margin-top: 8px;"><code>${escapeHtml(section.signal_shift)}</code></div>` : ""}
+          ${section.highlights && section.highlights.length ? `<div style="margin-top: 8px;">${section.highlights.map((item) => `<div><code>${escapeHtml(item)}</code></div>`).join("")}</div>` : ""}
+          ${renderChangedFields(section.changed_fields || [])}
+        </div>
+      `;
+    }
+
+    function renderComparison(payload) {
+      const left = payload.left || {};
+      const right = payload.right || {};
+      const timeframes = payload.timeframes || [];
+      const changedSections = payload.changed_sections || [];
+      els.compareOutput.innerHTML = `
+        <div class="diff">
+          <strong>${escapeHtml(payload.summary || "对比结果")}</strong>
+          <div class="muted" style="margin-top: 6px;">${escapeHtml(payload.left?.analysis_id || payload.left_id || "")} 对比 ${escapeHtml(payload.right?.analysis_id || payload.right_id || "")}</div>
+          <div style="margin-top: 8px;">变化区块：<code>${escapeHtml(changedSections.join("、") || "无")}</code></div>
+          <div>总变化数：<code>${escapeHtml(payload.total_change_count ?? 0)}</code></div>
+        </div>
+        <div class="summary-grid">
+          <div class="diff">
+            <strong>左侧</strong>
+            <div>分析：<code>${escapeHtml(left.analysis_id || "")}</code></div>
+            <div>结论：${displayAction(left.action)}</div>
+            <div>偏向：${displayBias(left.bias)}</div>
+            <div>置信度：${escapeHtml(left.confidence ?? "")}</div>
+            <div>节奏：${displayTiming(left.recommended_timing)}</div>
+          </div>
+          <div class="diff">
+            <strong>右侧</strong>
+            <div>分析：<code>${escapeHtml(right.analysis_id || "")}</code></div>
+            <div>结论：${displayAction(right.action)}</div>
+            <div>偏向：${displayBias(right.bias)}</div>
+            <div>置信度：${escapeHtml(right.confidence ?? "")}</div>
+            <div>节奏：${displayTiming(right.recommended_timing)}</div>
+          </div>
+        </div>
+        <div class="summary-grid">
+          <div class="diff">
+            <strong>决策变化</strong>
+            <div class="muted" style="margin-top: 6px;">${payload.decision?.change_count ?? 0} 个变化字段</div>
+            ${renderChangedFields(payload.decision?.changed_fields || [])}
+          </div>
+          <div class="diff">
+            <strong>市场状态变化</strong>
+            <div class="muted" style="margin-top: 6px;">${payload.market_regime?.change_count ?? 0} 个变化字段</div>
+            ${renderChangedFields(payload.market_regime?.changed_fields || [])}
+          </div>
+        </div>
+        ${renderSectionDiff("诊断变化", payload.diagnostics)}
+        <div class="diff">
+          <strong>周期变化</strong>
+          ${timeframes.length ? timeframes.map((section) => renderTimeframeDiff(section)).join("") : '<div class="muted" style="margin-top: 8px;">没有周期变化。</div>'}
+        </div>
+        <div class="diff">
+          <strong>补充说明</strong>
+          <div style="margin-top: 8px;">相同交易对：<code>${escapeHtml(payload.same_symbol)}</code></div>
+          <div>相同交易所：<code>${escapeHtml(payload.same_exchange)}</code></div>
+          <div>相同市场类型：<code>${escapeHtml(payload.same_market_type)}</code></div>
+          <div>相同策略：<code>${escapeHtml(payload.same_strategy_profile)}</code></div>
+        </div>
+        <details class="diff">
+          <summary>左侧原始 JSON</summary>
+          <pre>${escapeHtml(JSON.stringify(left, null, 2))}</pre>
+        </details>
+        <details class="diff">
+          <summary>右侧原始 JSON</summary>
+          <pre>${escapeHtml(JSON.stringify(right, null, 2))}</pre>
+        </details>
+      `;
+    }
+
+    async function loadAnalyses() {
+      const query = toQuery(readFilters());
+      els.listStatus.textContent = "正在加载分析...";
+      try {
+        const response = await fetch(`/analyses${query ? `?${query}` : ""}`);
+        const payload = await response.json();
+        if (!response.ok) {
+          throw new Error(payload.detail || "加载分析失败");
+        }
+        renderAnalyses(payload.items || []);
+        els.listStatus.textContent = `已加载 ${payload.pagination?.returned ?? (payload.items || []).length} / ${payload.total ?? 0} 条分析。`;
+      } catch (error) {
+        els.analysesBody.innerHTML = '<tr><td colspan="9" class="muted">加载分析失败。</td></tr>';
+        els.listStatus.textContent = String(error.message || error);
+      }
+    }
+
+    async function compareAnalyses() {
+      const left_id = els.leftId.value.trim();
+      const right_id = els.rightId.value.trim();
+      els.compareStatus.textContent = "正在对比...";
+      els.compareOutput.innerHTML = "";
+      try {
+        const response = await fetch(`/analysis/${encodeURIComponent(left_id)}/diff/${encodeURIComponent(right_id)}`);
+        const payload = await response.json();
+        if (!response.ok) {
+          throw new Error(payload.detail || "对比失败");
+        }
+        renderComparison(payload);
+        els.compareStatus.textContent = "对比完成。";
+      } catch (error) {
+        els.compareStatus.textContent = String(error.message || error);
+      }
+    }
+
+    document.getElementById("loadBtn").addEventListener("click", (event) => {
+      event.preventDefault();
+      loadAnalyses();
+    });
+    document.getElementById("resetBtn").addEventListener("click", (event) => {
+      event.preventDefault();
+      Object.values(els).forEach((node) => {
+        if (node instanceof HTMLInputElement) {
+          node.value = "";
+        }
+      });
+      els.limit.value = "50";
+      els.offset.value = "0";
+      loadAnalyses();
+    });
+    document.getElementById("compareBtn").addEventListener("click", (event) => {
+      event.preventDefault();
+      compareAnalyses();
+    });
+
+    const urlParams = new URLSearchParams(window.location.search);
+    ["symbol", "action", "bias", "strategy_profile", "from_time", "to_time", "limit", "offset"].forEach((key) => {
+      const value = urlParams.get(key);
+      if (value !== null) {
+        els[key].value = value;
+      }
+    });
+
+    loadAnalyses();
+  </script>
+</body>
+</html>

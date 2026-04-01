@@ -1,0 +1,35 @@
+atr_period: 14
+swing_window: 3
+ema:
+  trend_periods: [20, 50, 100, 200]
+  execution_fast: 21
+  execution_slow: 55
+execution:
+  pullback_distance_atr: 1.0
+  extension_distance_atr: 1.55
+  support_proximity_atr: 0.75
+  resistance_proximity_atr: 0.75
+structure:
+  swing_proximity_atr: 0.8
+micro:
+  confirmation_lookback: 20
+  volume_contraction_ratio: 0.9
+symbol_quality:
+  preferred_bases: ["BTC", "ETH", "SOL", "BNB", "XRP", "ADA", "DOGE"]
+  preferred_bonus: 8
+  non_preferred_penalty: 6
+  low_quote_volume_1h: 750000.0
+  low_quote_volume_15m: 200000.0
+  low_liquidity_penalty: 6
+  wick_ratio_threshold: 0.45
+  wick_penalty: 5
+volatility:
+  low_atr_pct: 0.6
+  high_atr_pct: 2.0
+risk:
+  atr_buffer: 0.25
+  minimum_r_multiple: 1.0
+confidence:
+  action_threshold: 65
+chart:
+  candles: 80

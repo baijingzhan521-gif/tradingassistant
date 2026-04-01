@@ -1,0 +1,1 @@
+"""Vision adapter abstractions."""

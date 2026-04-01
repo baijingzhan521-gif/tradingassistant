@@ -1,0 +1,16 @@
+micro:
+  confirmation_lookback: 24
+execution:
+  pullback_distance_atr: 0.85
+  support_proximity_atr: 0.55
+  resistance_proximity_atr: 0.55
+setup:
+  require_structure_ready: true
+trigger:
+  min_auxiliary_confirmations: 2
+  mixed_score: -6
+  none_score: -14
+backtest:
+  cooldown_bars_after_exit: 15
+window:
+  trend_strength_threshold: 65

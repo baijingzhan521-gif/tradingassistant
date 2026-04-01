@@ -1,0 +1,9 @@
+.venv/
+.venv311/
+.venv-py39-backup/
+.pytest_cache/
+__pycache__/
+*.pyc
+.DS_Store
+trading_assistant.db
+artifacts/
