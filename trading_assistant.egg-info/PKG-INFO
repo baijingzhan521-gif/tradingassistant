@@ -1,3 +1,24 @@
+Metadata-Version: 2.4
+Name: trading-assistant
+Version: 0.1.0
+Summary: Rule-based multi-timeframe trading analysis assistant
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: fastapi<1.0,>=0.115
+Requires-Dist: uvicorn[standard]<1.0,>=0.30
+Requires-Dist: pydantic<3.0,>=2.7
+Requires-Dist: pydantic-settings<3.0,>=2.4
+Requires-Dist: sqlalchemy<3.0,>=2.0
+Requires-Dist: ccxt<5.0,>=4.4
+Requires-Dist: pandas<3.0,>=2.2
+Requires-Dist: numpy<3.0,>=1.26
+Requires-Dist: PyYAML<7.0,>=6.0
+Requires-Dist: httpx<1.0,>=0.27
+Requires-Dist: requests<3.0,>=2.32
+Provides-Extra: dev
+Requires-Dist: pytest<9.0,>=8.3; extra == "dev"
+Requires-Dist: playwright<2.0,>=1.53; extra == "dev"
+
 # Trading Analysis Assistant MVP
 
 一个基于真实 OHLCV 行情数据、规则引擎和多时间周期分析的“半自动交易分析助手”后端 MVP。

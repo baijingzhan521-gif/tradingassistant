@@ -64,6 +64,19 @@ class BacktestAssumptions:
     long_exit: Optional[dict[str, Any]] = None
     short_exit: Optional[dict[str, Any]] = None
     swing_detection_mode: str = "centered"
+    # --- trailing stop ---
+    trailing_stop_enabled: bool = False
+    trailing_stop_atr_mult: float = 3.0
+    trailing_stop_activation_r: float = 1.0
+    # --- leverage ---
+    leverage: float = 1.0
+    max_leverage: float = 3.0
+    # --- drawdown circuit-breaker ---
+    drawdown_circuit_breaker_enabled: bool = False
+    drawdown_level1_pct: float = 10.0
+    drawdown_level2_pct: float = 20.0
+    drawdown_level3_pct: float = 25.0
+    drawdown_cooldown_bars: int = 168
 
 
 @dataclass
@@ -90,6 +103,7 @@ class BacktestTrade:
     pnl_r: float
     gross_pnl_quote: float
     fees_quote: float
+    leverage: float = 1.0
 
 
 @dataclass
@@ -195,6 +209,15 @@ class _OpenPosition:
     tp2_hit: bool = False
     bars_held: int = 0
     last_fill_price: float = 0.0
+    # --- trailing stop ---
+    trailing_stop_enabled: bool = False
+    trailing_stop_atr_mult: float = 3.0
+    trailing_stop_activation_r: float = 1.0
+    trailing_stop_active: bool = False
+    highest_price_since_entry: float = 0.0
+    lowest_price_since_entry: float = float("inf")
+    # --- leverage ---
+    leverage: float = 1.0
 
 
 class BacktestService:
@@ -1119,8 +1142,15 @@ class BacktestService:
             tp1_scale_out=tp1_scale_out,
             move_stop_to_entry_after_tp1=move_stop_to_entry_after_tp1,
             max_hold_bars=max_hold_bars,
+            trailing_stop_enabled=self.assumptions.trailing_stop_enabled,
+            trailing_stop_atr_mult=self.assumptions.trailing_stop_atr_mult,
+            trailing_stop_activation_r=self.assumptions.trailing_stop_activation_r,
+            highest_price_since_entry=fill_price,
+            lowest_price_since_entry=fill_price,
+            leverage=self.assumptions.leverage,
         )
-        entry_fee = fill_price * (self.assumptions.taker_fee_bps / 10000)
+        # Fees are charged on notional value (price × quantity × leverage) per exchange convention
+        entry_fee = fill_price * (self.assumptions.taker_fee_bps / 10000) * position.leverage
         position.fees_quote += entry_fee
         position.realized_pnl_quote -= entry_fee
         position.last_fill_price = fill_price
@@ -1139,43 +1169,84 @@ class BacktestService:
         low = float(candle["low"])
         close = float(candle["close"])
 
+        # Track extreme prices for trailing stop
+        position.highest_price_since_entry = max(position.highest_price_since_entry, high)
+        position.lowest_price_since_entry = min(position.lowest_price_since_entry, low)
+
+        # Update trailing stop if enabled and activated
+        if position.trailing_stop_enabled:
+            self._update_trailing_stop(position, candle)
+
         if position.take_profit_mode == "fixed_r":
             return self._update_open_position_fixed_r(position=position, candle=candle, max_hold_bars=max_hold_bars)
 
         if position.side == Action.LONG:
             if self.assumptions.conservative_same_bar_exit and low <= position.current_stop_price:
-                reason = "breakeven_after_tp1" if position.tp1_hit and position.current_stop_price >= position.entry_price else "stop_loss"
+                reason = self._stop_exit_reason(position)
                 return self._close_position(position, candle, exit_reason=reason, fill_price=position.current_stop_price)
             if (not position.tp1_hit) and high >= position.tp1_price:
                 self._take_partial_profit(position, target_price=position.tp1_price, qty=position.tp1_scale_out)
                 position.tp1_hit = True
-                if position.move_stop_to_entry_after_tp1:
+                if not position.trailing_stop_active and position.move_stop_to_entry_after_tp1:
                     position.current_stop_price = max(position.current_stop_price, position.entry_price)
-            if position.tp1_hit and high >= position.tp2_price:
+            if not position.trailing_stop_enabled and position.tp1_hit and high >= position.tp2_price:
                 position.tp2_hit = True
                 return self._close_position(position, candle, exit_reason="tp2", fill_price=position.tp2_price)
             if low <= position.current_stop_price:
-                reason = "breakeven_after_tp1" if position.tp1_hit and position.current_stop_price >= position.entry_price else "stop_loss"
+                reason = self._stop_exit_reason(position)
                 return self._close_position(position, candle, exit_reason=reason, fill_price=position.current_stop_price)
         else:
             if self.assumptions.conservative_same_bar_exit and high >= position.current_stop_price:
-                reason = "breakeven_after_tp1" if position.tp1_hit and position.current_stop_price <= position.entry_price else "stop_loss"
+                reason = self._stop_exit_reason(position)
                 return self._close_position(position, candle, exit_reason=reason, fill_price=position.current_stop_price)
             if (not position.tp1_hit) and low <= position.tp1_price:
                 self._take_partial_profit(position, target_price=position.tp1_price, qty=position.tp1_scale_out)
                 position.tp1_hit = True
-                if position.move_stop_to_entry_after_tp1:
+                if not position.trailing_stop_active and position.move_stop_to_entry_after_tp1:
                     position.current_stop_price = min(position.current_stop_price, position.entry_price)
-            if position.tp1_hit and low <= position.tp2_price:
+            if not position.trailing_stop_enabled and position.tp1_hit and low <= position.tp2_price:
                 position.tp2_hit = True
                 return self._close_position(position, candle, exit_reason="tp2", fill_price=position.tp2_price)
             if high >= position.current_stop_price:
-                reason = "breakeven_after_tp1" if position.tp1_hit and position.current_stop_price <= position.entry_price else "stop_loss"
+                reason = self._stop_exit_reason(position)
                 return self._close_position(position, candle, exit_reason=reason, fill_price=position.current_stop_price)
 
         if position.bars_held >= max_hold_bars:
             return self._close_position(position, candle, exit_reason="time_stop", fill_price=close)
         return None
+
+    def _stop_exit_reason(self, position: _OpenPosition) -> str:
+        if position.trailing_stop_active:
+            return "trailing_stop"
+        if position.tp1_hit:
+            if position.side == Action.LONG and position.current_stop_price >= position.entry_price:
+                return "breakeven_after_tp1"
+            if position.side == Action.SHORT and position.current_stop_price <= position.entry_price:
+                return "breakeven_after_tp1"
+        return "stop_loss"
+
+    def _update_trailing_stop(self, position: _OpenPosition, candle: pd.Series) -> None:
+        """Update trailing stop based on ATR and highest/lowest price since entry."""
+        initial_risk = abs(position.entry_price - position.initial_stop_price)
+        if initial_risk <= 0:
+            return
+
+        # Get ATR from candle if available, otherwise use initial risk as proxy
+        atr = float(candle.get("atr14", initial_risk))
+
+        if position.side == Action.LONG:
+            # Check if profit has reached activation threshold
+            unrealized_r = (position.highest_price_since_entry - position.entry_price) / initial_risk
+            if unrealized_r >= position.trailing_stop_activation_r:
+                position.trailing_stop_active = True
+                trailing_level = position.highest_price_since_entry - (atr * position.trailing_stop_atr_mult)
+                position.current_stop_price = max(position.current_stop_price, trailing_level)
+        else:
+            unrealized_r = (position.entry_price - position.lowest_price_since_entry) / initial_risk
+            if unrealized_r >= position.trailing_stop_activation_r:
+                position.trailing_stop_active = True
+                trailing_level = position.lowest_price_since_entry + (atr * position.trailing_stop_atr_mult)
+                position.current_stop_price = min(position.current_stop_price, trailing_level)
 
     def _update_open_position_fixed_r(
         self,
@@ -1218,7 +1289,8 @@ class BacktestService:
         fill_qty = min(position.remaining_qty, qty)
         effective_price = self._effective_exit_price(position.side, target_price)
         gross = self._gross_pnl(position.side, position.entry_price, effective_price, fill_qty)
-        fee = effective_price * fill_qty * (self.assumptions.taker_fee_bps / 10000)
+        gross *= position.leverage
+        fee = effective_price * fill_qty * (self.assumptions.taker_fee_bps / 10000) * position.leverage
         position.realized_pnl_quote += gross - fee
         position.fees_quote += fee
         position.remaining_qty -= fill_qty
@@ -1235,7 +1307,8 @@ class BacktestService:
         effective_price = self._effective_exit_price(position.side, fill_price)
         if position.remaining_qty > 0:
             gross = self._gross_pnl(position.side, position.entry_price, effective_price, position.remaining_qty)
-            fee = effective_price * position.remaining_qty * (self.assumptions.taker_fee_bps / 10000)
+            gross *= position.leverage
+            fee = effective_price * position.remaining_qty * (self.assumptions.taker_fee_bps / 10000) * position.leverage
             position.realized_pnl_quote += gross - fee
             position.fees_quote += fee
             position.remaining_qty = 0.0
@@ -1267,6 +1340,7 @@ class BacktestService:
             pnl_r=round(pnl_r, 4),
             gross_pnl_quote=round(position.realized_pnl_quote, 6),
             fees_quote=round(position.fees_quote, 6),
+            leverage=position.leverage,
         )
 
     def _effective_exit_price(self, side: Action, raw_price: float) -> float:

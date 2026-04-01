@@ -225,6 +225,18 @@ from app.strategies.swing_trend_simple_candidate_v2 import (
     DEFAULT_CONFIG as SWING_SIMPLE_CANDIDATE_V2_DEFAULT_CONFIG,
     SwingTrendSimpleCandidateV2Strategy,
 )
+from app.strategies.trend_following_v1 import (
+    DEFAULT_CONFIG as TREND_FOLLOWING_V1_DEFAULT_CONFIG,
+    TrendFollowingV1Strategy,
+)
+from app.strategies.swing_improved_v1 import (
+    DEFAULT_CONFIG as SWING_IMPROVED_V1_DEFAULT_CONFIG,
+    SwingImprovedV1Strategy,
+)
+from app.strategies.mean_reversion_v1 import (
+    DEFAULT_CONFIG as MEAN_REVERSION_V1_DEFAULT_CONFIG,
+    MeanReversionV1Strategy,
+)
 from app.strategies.trend_pullback_v1 import DEFAULT_CONFIG, TrendPullbackV1Strategy
 from app.strategies.trend_pullback_pullback_085_v1 import (
     DEFAULT_CONFIG as TREND_PULLBACK_PULLBACK_085_DEFAULT_CONFIG,
@@ -463,6 +475,9 @@ class StrategyService:
             INTRADAY_V2_COOLDOWN10_DEFAULT_CONFIG,
             IntradayMTFV2Cooldown10V1Strategy,
         ),
+        "trend_following_v1": (TREND_FOLLOWING_V1_DEFAULT_CONFIG, TrendFollowingV1Strategy),
+        "swing_improved_v1": (SWING_IMPROVED_V1_DEFAULT_CONFIG, SwingImprovedV1Strategy),
+        "mean_reversion_v1": (MEAN_REVERSION_V1_DEFAULT_CONFIG, MeanReversionV1Strategy),
     }
 
     def __init__(self, config_loader: Optional[StrategyConfigLoader] = None) -> None:
