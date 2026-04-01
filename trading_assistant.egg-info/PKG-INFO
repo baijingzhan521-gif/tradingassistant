@@ -49,6 +49,7 @@ Requires-Dist: playwright<2.0,>=1.53; extra == "dev"
 如果要在新的对话窗口继续开发，不要只看 README 的概念说明，优先先看这份项目交接文档：
 
 - 当前项目记忆与开发交接: [`docs/project_memory.md`](./docs/project_memory.md)
+- 回测交接文档（给接手同事的完整指南）: [`HANDOFF.md`](./HANDOFF.md)
 
 ## 当前主线状态
 
