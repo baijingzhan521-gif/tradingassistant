@@ -14,6 +14,7 @@ app/api/routes_workspace_analysis.py
 app/api/routes_workspace_backtests.py
 app/backtesting/__init__.py
 app/backtesting/diagnostics.py
+app/backtesting/portfolio_orchestrator.py
 app/backtesting/service.py
 app/core/__init__.py
 app/core/config.py
@@ -26,11 +27,15 @@ app/data/bybit_liquidation_stream_client.py
 app/data/exchange_client.py
 app/data/ohlcv_service.py
 app/indicators/__init__.py
+app/indicators/adx.py
 app/indicators/atr.py
+app/indicators/bollinger.py
 app/indicators/candle_profile.py
 app/indicators/divergence.py
+app/indicators/donchian.py
 app/indicators/ema.py
 app/indicators/market_structure.py
+app/indicators/regime_classifier.py
 app/indicators/rsi.py
 app/indicators/swings.py
 app/models/__init__.py
@@ -68,6 +73,7 @@ app/strategies/intraday_mtf_v2.py
 app/strategies/intraday_mtf_v2_cooldown10_v1.py
 app/strategies/intraday_mtf_v2_pullback_075_v1.py
 app/strategies/intraday_mtf_v2_trend70_v1.py
+app/strategies/mean_reversion_v1.py
 app/strategies/mtf_v1.py
 app/strategies/scoring.py
 app/strategies/swing_breakout_base_width_45_v1_btc.py
@@ -78,6 +84,7 @@ app/strategies/swing_exhaustion_divergence_ct_block80_v1_btc.py
 app/strategies/swing_exhaustion_divergence_min_level3_v1_btc.py
 app/strategies/swing_exhaustion_divergence_short_only_v1_btc.py
 app/strategies/swing_exhaustion_divergence_v1_btc.py
+app/strategies/swing_improved_v1.py
 app/strategies/swing_neutral_range_reversion_edge_030_v1_btc.py
 app/strategies/swing_neutral_range_reversion_opp_r_100_v1_btc.py
 app/strategies/swing_neutral_range_reversion_sweep_008_v1_btc.py
@@ -119,6 +126,7 @@ app/strategies/swing_trend_simple_candidate_v1.py
 app/strategies/swing_trend_simple_candidate_v2.py
 app/strategies/swing_trend_structure_gate_hard_v1.py
 app/strategies/swing_trend_v1.py
+app/strategies/trend_following_v1.py
 app/strategies/trend_pullback_aux2_v1.py
 app/strategies/trend_pullback_pullback_085_v1.py
 app/strategies/trend_pullback_trend70_v1.py
@@ -159,7 +167,10 @@ tests/test_mainline_attribution_audit_service.py
 tests/test_mainline_managed_candidate_promotion_gate.py
 tests/test_matrix_standalone_one_rule_gate.py
 tests/test_neutral_range_standalone_one_rule_gate.py
+tests/test_new_indicators.py
+tests/test_new_strategies.py
 tests/test_ohlcv_service.py
+tests/test_portfolio_orchestrator.py
 tests/test_position_confluence_factor_study_service.py
 tests/test_post_tp1_extension_matrix.py
 tests/test_post_tp1_managed_candidate_comparison.py
