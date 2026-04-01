@@ -25,3 +25,10 @@ def safe_float(value: Optional[Union[float, int]]) -> Optional[float]:
 
 def midpoint(low: float, high: float) -> float:
     return (low + high) / 2.0
+
+
+def safe_ratio(numerator: float, denominator: float) -> float:
+    """Safe division returning 0.0 when denominator is 0."""
+    if denominator == 0:
+        return 0.0
+    return numerator / denominator

@@ -47,10 +47,10 @@ logger = logging.getLogger(__name__)
 
 STRATEGY_PROFILES = ["swing_improved_v1", "trend_following_v1", "mean_reversion_v1"]
 
+# Derive timeframes from strategy objects to stay in sync
 STRATEGY_TIMEFRAMES: dict[str, tuple[str, ...]] = {
-    "swing_improved_v1": ("1d", "4h", "1h"),
-    "trend_following_v1": ("1d", "4h", "1h"),
-    "mean_reversion_v1": ("1d", "4h", "1h"),
+    name: StrategyService().build_strategy(name).required_timeframes
+    for name in STRATEGY_PROFILES
 }
 
 

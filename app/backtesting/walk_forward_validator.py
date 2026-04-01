@@ -17,6 +17,7 @@ import numpy as np
 from app.backtesting.service import BacktestAssumptions, BacktestService, BacktestSummary, BacktestTrade
 from app.data.ohlcv_service import OhlcvService
 from app.services.strategy_service import StrategyService
+from app.utils.math_utils import safe_ratio as _safe_ratio
 
 logger = logging.getLogger(__name__)
 
@@ -154,11 +155,7 @@ def generate_folds(
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _safe_ratio(numerator: float, denominator: float) -> float:
-    """Safe division returning 0.0 when denominator is 0."""
-    if denominator == 0:
-        return 0.0
-    return numerator / denominator
+SHARPE_CAP = 99.0  # Maximum Sharpe-equivalent when std is exactly zero
 
 
 def _extract_summary_metrics(summary: BacktestSummary) -> dict[str, float]:
@@ -373,7 +370,7 @@ class WalkForwardValidator:
         oos_std = stdev(oos_exps) if len(oos_exps) >= 2 else 0.0
         # Sharpe equivalent: when std=0 and mean>0, return capped high value
         if oos_std == 0.0:
-            oos_sharpe = 99.0 if avg_oos_exp > 0 else (0.0 if avg_oos_exp == 0 else -99.0)
+            oos_sharpe = SHARPE_CAP if avg_oos_exp > 0 else (0.0 if avg_oos_exp == 0 else -SHARPE_CAP)
         else:
             oos_sharpe = avg_oos_exp / oos_std
 

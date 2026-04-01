@@ -18,6 +18,7 @@ from typing import Any, Optional
 from app.backtesting.service import BacktestAssumptions, BacktestService, BacktestSummary, BacktestTrade
 from app.data.ohlcv_service import OhlcvService
 from app.services.strategy_service import StrategyService
+from app.utils.math_utils import safe_ratio as _safe_ratio
 
 logger = logging.getLogger(__name__)
 
@@ -148,12 +149,6 @@ DEFAULT_STRESS_SCENARIOS: list[StressScenario] = [
         slippage_multiplier=5.0,
     ),
 ]
-
-
-def _safe_ratio(numerator: float, denominator: float) -> float:
-    if denominator == 0:
-        return 0.0
-    return numerator / denominator
 
 
 class StressTester:

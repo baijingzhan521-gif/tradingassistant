@@ -9,8 +9,8 @@ from app.backtesting.stress_tester import (
     StressScenario,
     StressTestReport,
     StressTester,
-    _safe_ratio,
 )
+from app.utils.math_utils import safe_ratio as _safe_ratio
 from app.backtesting.service import BacktestAssumptions
 
 

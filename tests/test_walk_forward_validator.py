@@ -11,8 +11,8 @@ from app.backtesting.walk_forward_validator import (
     WalkForwardReport,
     WalkForwardValidator,
     generate_folds,
-    _safe_ratio,
 )
+from app.utils.math_utils import safe_ratio as _safe_ratio
 
 
 class TestFoldGeneration:
