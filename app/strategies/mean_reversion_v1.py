@@ -92,11 +92,11 @@ class MeanReversionV1Strategy(WindowedMTFStrategy):
 
         if higher_bias == Bias.BULLISH:
             at_extreme = band_position < bb_pctb_low
-            near_extreme = band_position < bb_pctb_low * 3
+            near_extreme = band_position < min(bb_pctb_low * 3, 0.20)
             reversal_ready = bool(candle_profile.get("has_bullish_reversal_candle", False))
         else:
             at_extreme = band_position > bb_pctb_high
-            near_extreme = band_position > 1.0 - (1.0 - bb_pctb_high) * 3
+            near_extreme = band_position > max(1.0 - (1.0 - bb_pctb_high) * 3, 0.80)
             reversal_ready = bool(candle_profile.get("has_bearish_reversal_candle", False))
 
         if at_extreme:
@@ -153,12 +153,12 @@ class MeanReversionV1Strategy(WindowedMTFStrategy):
         candle_profile = trigger_ctx.candle_profile
 
         if higher_bias == Bias.BULLISH:
-            at_band_extreme = band_position < bb_pctb_low * 3
+            at_band_extreme = band_position < min(bb_pctb_low * 3, 0.20)
             has_reversal = bool(candle_profile.get("has_bullish_reversal_candle", False))
             confirmed = at_band_extreme and has_reversal
             state = TriggerState.BULLISH_CONFIRMED if confirmed else TriggerState.NONE
         else:
-            at_band_extreme = band_position > 1.0 - (1.0 - bb_pctb_high) * 3
+            at_band_extreme = band_position > max(1.0 - (1.0 - bb_pctb_high) * 3, 0.80)
             has_reversal = bool(candle_profile.get("has_bearish_reversal_candle", False))
             confirmed = at_band_extreme and has_reversal
             state = TriggerState.BEARISH_CONFIRMED if confirmed else TriggerState.NONE

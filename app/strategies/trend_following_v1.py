@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-from app.schemas.common import Action, Bias, RecommendedTiming, TriggerState
+from app.schemas.common import Action, Bias, RecommendedTiming, StructureState, TriggerState
 from app.strategies.windowed_mtf import COMMON_DEFAULT_CONFIG, PreparedTimeframe, WindowedMTFStrategy
 
 
@@ -72,8 +72,6 @@ class TrendFollowingV1Strategy(WindowedMTFStrategy):
             aligned = price_above_ema200
             if aligned:
                 score += 10
-            from app.schemas.common import StructureState
-
             if setup_ctx.model.structure_state == StructureState.BULLISH:
                 score += 5
         else:
@@ -81,8 +79,6 @@ class TrendFollowingV1Strategy(WindowedMTFStrategy):
             aligned = price_below_ema200
             if aligned:
                 score += 10
-            from app.schemas.common import StructureState
-
             if setup_ctx.model.structure_state == StructureState.BEARISH:
                 score += 5
 
